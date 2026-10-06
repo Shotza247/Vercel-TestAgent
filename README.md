@@ -1,35 +1,86 @@
-# pulse360_analysis_agent
+# Pulse360 Analysis Agent
 
-This is an [eve](https://eve.dev) agent bootstrapped with [`eve init`](https://eve.dev/docs/reference/cli#eve-init).
+An exploratory data analysis (EDA) agent that turns plain-English questions into simple, well-explained SQL analysis. Built with [eve](https://eve.dev) and deployed on Vercel.
+
+Ask a question like *"Which customer segments grew fastest last quarter?"* and the agent breaks it into SQL queries, explains the results with context, and suggests relevant next steps.
+
+## Features
+
+- **Natural language to SQL:** complex questions are simplified into clear analysis queries
+- **Readable answers:** results are organised for readability, with depth adapted to the user
+- **Connected to your tools** via MCP (Model Context Protocol):
+  - **Supabase:** manage and query databases, authentication, and storage
+  - **Notion:** search and edit pages and databases
+  - **Vercel:** deploy agents and apps, manage projects
+- **Multiple channels:** talk to it from Slack or the eve terminal UI
+
+## Architecture
+
+```
+agent/
+├── agent.ts             # Model and runtime config (deepseek/deepseek-v3.1)
+├── instructions.md      # Agent identity, tone, and response guidelines
+├── channels/
+│   ├── eve.ts           # eve TUI / HTTP channel (Vercel OIDC + local dev auth)
+│   └── slack.ts         # Slack channel
+└── connections/
+    ├── supabase.ts      # Supabase MCP
+    ├── notion.ts        # Notion MCP
+    └── vercel.ts        # Vercel MCP
+```
+
+An eve agent is a directory of files under `agent/`; eve compiles and runs it. To change behaviour, edit `instructions.md`. To add capabilities, add tools, connections, channels, skills, subagents, or schedules under `agent/`.
 
 ## Getting started
 
-First, run the development server:
+**Prerequisites**
+
+- Node.js 24.x
+- [pnpm](https://pnpm.io)
+- A Vercel account (connections authenticate through `@vercel/connect`)
+
+**Install and run**
 
 ```bash
-eve dev
+pnpm install
+pnpm dev        # starts the eve dev server with an interactive TUI
 ```
 
-The development TUI opens an interactive session where you can send messages to your agent.
+**Other scripts**
 
-Start by editing `agent/instructions.md` to define the agent's identity, purpose, tone, and response guidelines. Configure its model and runtime behavior in `agent/agent.ts`.
+| Command          | What it does                  |
+|------------------|-------------------------------|
+| `pnpm dev`       | Run locally with the eve TUI  |
+| `pnpm build`     | Build the agent               |
+| `pnpm start`     | Run the built agent           |
+| `pnpm eval`      | Run agent evals               |
+| `pnpm typecheck` | Type-check with `tsc`         |
+| `pnpm deploy`    | Deploy to Vercel              |
 
-Add capabilities under `agent/`, including tools, connections, channels, skills, subagents, and schedules. eve reloads your changes as you work.
+## Deployment
+
+```bash
+pnpm deploy     # runs `eve deploy`
+```
+
+`eve deploy` links a Vercel project if needed and deploys to production. See the [eve deployment docs](https://eve.dev/docs/guides/deployment/vercel) for auth and environment variables.
+
+## Authentication note
+
+The eve channel currently uses `placeholderAuth()`, which **does not allow browser requests in production**. Before exposing the agent publicly, replace it with a real auth provider (e.g. Auth.js or Clerk), or use `none()` for a public demo.
+
+## Customising
+
+- **Change personality or purpose:** edit `agent/instructions.md`
+- **Swap the model:** edit `agent/agent.ts`
+- **Add an integration:** `eve registry search <query>`, then `eve add <item> --non-interactive`
+
+## Tech stack
+
+[eve](https://eve.dev) · [Vercel AI SDK](https://ai-sdk.dev) · TypeScript · Zod · MCP · Supabase · Notion · Slack
 
 ## Learn more
 
-To learn more about eve, explore these resources:
-
-- [eve documentation](https://eve.dev/docs) — learn about eve's features and authoring APIs.
-- [Build an Agent tutorial](https://eve.dev/docs/tutorial/first-agent) — build and deploy an agent step by step.
-- [eve on GitHub](https://github.com/vercel/eve) — view the source and contribute.
-
-## Deploy on Vercel
-
-Deploy your agent to [Vercel](https://vercel.com) from the project root:
-
-```bash
-eve deploy
-```
-
-`eve deploy` links a Vercel project if needed and deploys the agent to production. See the [eve deployment documentation](https://eve.dev/docs/guides/deployment/vercel) for authentication, environment variables, and deployment options.
+- [eve documentation](https://eve.dev/docs)
+- [Build an Agent tutorial](https://eve.dev/docs/tutorial/first-agent)
+- [eve on GitHub](https://github.com/vercel/eve)
